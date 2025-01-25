@@ -1,0 +1,81 @@
+@startuml s
+
+class ClientMainGUI {
+    - client: Client
+    - gameScreen: GameScreen
+    - lobbyScreen: LobbyScreen
+    - loginScreen: LoginScreen
+}
+
+class GameScreen {
+    - gameScreenCallbacksHandler: GameScreenCallbacksHandler
+    - moveButton: Button
+    - boardPane: BoardPane
+    + drawBoard()
+}
+
+class LobbyScreen {
+    - lobbyScreenCallbacksHandler: LobbyScreenCallbacksHandler
+    - startGameButton: Button
+    - leaveLobbyButton: Button
+    - changePlayerCount: Button
+    - playerCount: Label
+}
+
+class LoginScreen {
+    - loginScreenCallbacksHandler: LoginScreenCallbacksHandler
+    - loginButton: Button
+    - usernameField: TextField
+    - addressField: TextField
+    - portField: TextField
+}
+
+class BoardPane {
+    - boardDrawingTool: BoardDrawingTool
+    - nodeRepresentations: List<NodeRepresentation>
+    + drawBoard()
+}
+
+class BoardDrawingTool {
+    - nodeRepresentation: NodeRepresentation
+}
+
+class NodeRepresentation {
+    - node: Node
+    - pos: Coordinate
+    - radius: int
+    - color: Color
+}
+
+class GameScreenCallbacksHandler {
+    - onMoveMade()
+    - onTurnChange()
+}
+
+class LobbyScreenCallbacksHandler {
+    - onStartGame()
+    - onLeaveLobby()
+    - onChangePlayerCount()
+}
+
+class LoginScreenCallbacksHandler {
+    - onLogin()
+}
+
+ClientMainGUI --> GameScreen
+ClientMainGUI --> LobbyScreen
+ClientMainGUI --> LoginScreen
+
+ClientMainGUI --> GameScreenCallbacksHandler
+GameScreen --> GameScreenCallbacksHandler
+ClientMainGUI --> LobbyScreenCallbacksHandler
+LobbyScreen --> LobbyScreenCallbacksHandler
+ClientMainGUI --> LoginScreenCallbacksHandler
+LoginScreen --> LoginScreenCallbacksHandler
+
+GameScreen --> BoardPane
+BoardPane --> BoardDrawingTool
+BoardPane --> NodeRepresentation
+BoardDrawingTool --> NodeRepresentation
+
+@enduml

@@ -1,0 +1,22 @@
+.root {
+    -fx-background-color: #232323;
+    -fx-font-family: "Verdana";
+}
+
+.button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-padding: 10px 2px;
+    -fx-cursor: hand;
+
+    -fx-pref-width: 100px;
+}
+
+.button:hover {
+    -fx-background-color: #caffcc;
+}
+
+.label {
+    -fx-text-fill: white;
+}

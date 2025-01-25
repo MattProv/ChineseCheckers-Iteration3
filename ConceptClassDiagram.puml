@@ -1,0 +1,93 @@
+@startuml
+
+class Node {
+    + Neighbours : List<Node>
+    + Base : int
+    - Occupant : Pawn
+}
+
+class Pawn {
+    + Player : int
+}
+
+class Agent {
+    + Pawns : List<Pawn>
+    + Id : int
+    + Color : Color
+    + startBase : int
+    + endBase : int
+    + notify()
+    + move()
+}
+
+class Player {
+    + Owner : User
+}
+
+class User {
+    + Ipadress : String
+    + Id : int
+    + listenerLoop : Thread
+}
+
+class Server {
+    + users : List<User>
+    + Broadcast(Message)
+    + Send(User, Message)
+    + Read(User) : Message
+}
+
+class GameManager {
+    + board : Board
+    + agents : List<Agent>
+    + startGame()
+    + notify()
+    + move()
+}
+
+class ServerMain {
+    + main()
+    + gameManager : GameManager
+    + server : Server
+}
+
+class Client {
+    + connect(String, int)
+    + send(Message)
+    + read() : Message
+}
+
+class Message {
+    + messageType : MessageType
+}
+
+enum MessageType {
+    + STRING
+    + COMMAND
+}
+
+class Board {
+    + getNeighbours(Node) : List<Node>
+    + isValid(Move) : bool
+}
+
+class ClassicBoard {
+    + nodes : List<List<Node>>
+}
+
+ClassicBoard --|> Board
+Player --|> Agent
+Node -- Pawn
+Player --> User
+Agent --> Pawn
+Agent --> Node
+Server --> User
+GameManager --> Board
+GameManager --> Agent
+Board --> Node
+Message o-- MessageType
+ServerMain --> GameManager
+ServerMain --> Server
+Client -- Message
+Message -- Server
+@enduml
