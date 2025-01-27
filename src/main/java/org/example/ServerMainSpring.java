@@ -88,6 +88,7 @@ public class ServerMainSpring implements CommandLineRunner {
         server.AddHandler(new EndTurnMessageHandler(gameManager));
         server.AddHandler(new GameNameMessageHandler(gameManager));
         server.AddHandler(new LoadGameMessageHandler(gameManager, gameService));
+        server.AddHandler(new SetBotsCountMessageHandler(gameManager));
         server.Bind(Config.PORT);
         server.Listen();
 

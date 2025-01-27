@@ -112,6 +112,11 @@ public class ClientMainGUI extends Application {
             public void onChangeGameName(String gameName) {
                 client.send(new GameNameMessage(gameName));
             }
+
+            @Override
+            public void onChangeBotsCount(int botsCount) {
+                client.send(new BotsCountMessage(botsCount));
+            }
         });
 
         gameScreen.setCallbacksHandler(new GameScreen.CallbacksHandler() {

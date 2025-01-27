@@ -32,6 +32,7 @@ public class LobbyScreen extends BorderPane {
         public abstract void onChangeRulesType(RulesType rulesType);
         public abstract void onSetGameToBeLoaded(String gameName);
         public abstract void onChangeGameName(String gameName);
+        public abstract void onChangeBotsCount(int botsCount);
     }
 
     private CallbacksHandler callbacksHandler;
@@ -113,6 +114,19 @@ public class LobbyScreen extends BorderPane {
             callbacksHandler.onSetGameToBeLoaded(gameToBeLoadedNameField.getText());
         });
 
+        Label botsCountLabel = new Label("Bots count");
+        TextField botsCountField = new TextField();
+        botsCountField.setPromptText("Enter bots count");
+        Button updateBotsCountButton = new Button("Update");
+        updateBotsCountButton.setOnAction(e -> {
+            try {
+                int botsCount = Integer.parseInt(botsCountField.getText());
+                callbacksHandler.onChangeBotsCount(botsCount);
+            } catch (NumberFormatException ex) {
+                callbacksHandler.onError("Invalid bots count");
+            }
+        });
+
         options.add(playerCountLabel, 0, 0);
         options.add(playerCountField, 1, 0);
         options.add(updatePlayerCountButton, 2, 0);
@@ -132,6 +146,10 @@ public class LobbyScreen extends BorderPane {
         options.add(gameToBeLoadedName, 0, 4);
         options.add(gameToBeLoadedNameField, 1, 4);
         options.add(updateGameToBeLoadedButton, 2, 4);
+
+        options.add(botsCountLabel, 0, 5);
+        options.add(botsCountField, 1, 5);
+        options.add(updateBotsCountButton, 2, 5);
 
         Button startGameButton = new Button("Start game");
         startGameButton.setOnAction(e -> callbacksHandler.onGameStart());

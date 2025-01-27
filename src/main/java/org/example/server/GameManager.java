@@ -28,6 +28,7 @@ public final class GameManager {
     private final GameState gameState = new GameState();
     private List<Agent> agents = new ArrayList<>();
     private int currentTurn = 0;
+    private int botsCount = 0;
 
     // Ruleset for the game
     private Rules ruleset = new StandardRules();
@@ -89,7 +90,7 @@ public final class GameManager {
             return false;
         }
 
-        if (users.size() != playerCount) {
+        if (users.size() + botsCount != playerCount) {
             String msg = "Game cannot be started, " + users.size() + " users connected out of " + playerCount + " required!";
             gameManagerCallbackHandler.onGameNotStarted(msg);
             return false;
@@ -109,6 +110,9 @@ public final class GameManager {
         agents.clear();
         for (User user : lobby) {
             agents.add(new Player(user, agents.size()));
+        }
+        for (int i = 0; i < botsCount; i++) {
+            agents.add(new Bot(agents.size()));
         }
         gameState.getBoard().generateBoard();
         gameState.getBoard().defineBases();
@@ -254,7 +258,7 @@ public final class GameManager {
         System.out.println("Synchronizing game state.");
         List<String> playerNames = new ArrayList<>();
         for (Agent agent : agents) {
-            playerNames.add(agent.isPlayer() ? ((Player) agent).getOwner().getUsername() : "AI");
+            playerNames.add(agent.isPlayer() ? ((Player) agent).getOwner().getUsername() : "AI-"+(((Bot)agent).getId().toString()));
         }
         String[] playerNamesArray = new String[playerNames.size()];
         playerNamesArray = playerNames.toArray(playerNamesArray);
@@ -373,5 +377,10 @@ public final class GameManager {
 
     public GameDocument getGameToBeLoaded() {
         return gameToBeLoaded;
+    }
+
+    public void setBotsCount(int botsCount) {
+        this.botsCount = botsCount;
+        gameManagerCallbackHandler.onBotsCountChanged(botsCount);
     }
 }

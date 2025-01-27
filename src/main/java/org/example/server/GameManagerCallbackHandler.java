@@ -81,4 +81,9 @@ public class GameManagerCallbackHandler {
         System.out.println("Game name changed to " + gameName);
         Server.getServer().Broadcast(new StringMessage("Game name changed to " + gameName));
     }
+
+    public void onBotsCountChanged(int botsCount) {
+        System.out.println("Bots count changed to " + botsCount);
+        Server.getServer().Broadcast(new StringMessage("Bots count changed to " + botsCount));
+    }
 }

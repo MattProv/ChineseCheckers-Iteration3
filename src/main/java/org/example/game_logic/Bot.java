@@ -150,5 +150,10 @@ public class Bot extends Agent {
     }
 
 
-
+    @Override
+    public void promptMove(Board board) {
+        // TODO: finish this logic
+        // Move bestMove =
+        // GameManager.getInstance().makeMove(this, bestMove);
+    }
 }
