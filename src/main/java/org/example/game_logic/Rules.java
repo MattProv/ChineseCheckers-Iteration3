@@ -59,4 +59,6 @@ public interface Rules<T extends Board> {
      * @return the setup game board
      */
     T setupBoard(T board, List<Agent> agents);
+
+    RulesType getRulesType();
 }

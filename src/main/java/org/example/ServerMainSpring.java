@@ -1,11 +1,11 @@
 package org.example;
 
+import org.example.game_logic.Agent;
+import org.example.game_logic.Move;
 import org.example.game_logic.StandardBoard;
 import org.example.message.serverHandlers.*;
-import org.example.server.GameManager;
-import org.example.server.Server;
-import org.example.server.ServerCallbacksHandler;
-import org.example.server.ServerConnection;
+import org.example.server.*;
+import org.example.server.db.GameDocument;
 import org.example.server.db.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -40,6 +40,33 @@ public class ServerMainSpring implements CommandLineRunner {
             }
         };
 
+        gameManager.gameManagerCallbackHandler = new GameManagerCallbackHandler() {
+            GameDocument game;
+            boolean isSaved = false;
+
+            @Override
+            public void onGameStarted() {
+                super.onGameStarted();
+                isSaved = !(gameManager.getGameName() == null || gameManager.getGameName().isEmpty());
+                if(isSaved) {
+                    game = gameService.startNewGame();
+                    game.setBoardType(gameManager.getBoardType());
+                    game.setRulesType(gameManager.getRulesType());
+                    game.setPlayersCount(gameManager.getPlayersCount());
+
+                    gameService.saveGame(game);
+                }
+            }
+
+            @Override
+            public void onValidMove(Agent agent, Move move, String s) {
+                super.onValidMove(agent, move, s);
+
+                if(isSaved){
+                    gameService.saveMove(game, org.example.server.db.Move.fromMove(move));
+                }
+            }
+        };
         gameManager.setBoard(new StandardBoard());
 
         server.AddHandler(new MoveMessageHandler(gameManager));

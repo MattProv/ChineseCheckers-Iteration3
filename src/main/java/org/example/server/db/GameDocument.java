@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "games")
-public class GameCollection {
+public class GameDocument {
 
     @Id
     private String id; // MongoDB używa Stringa jako identyfikatora

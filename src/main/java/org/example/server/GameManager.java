@@ -30,7 +30,9 @@ public final class GameManager {
 
     // Ruleset for the game
     private Rules ruleset = new StandardRules();
-    private final GameManagerCallbackHandler gameManagerCallbackHandler = new GameManagerCallbackHandler();
+    public GameManagerCallbackHandler gameManagerCallbackHandler = new GameManagerCallbackHandler();
+
+    private String gameName;
 
     /**
      * Private constructor for Singleton design pattern.
@@ -311,5 +313,25 @@ public final class GameManager {
         synchronizeGameState();
 
         agents.get(currentTurn).promptMove(gameState.getBoard());
+    }
+
+    public BoardType getBoardType() {
+        return gameState.getBoard().getBoardType();
+    }
+
+    public RulesType getRulesType() {
+        return ruleset.getRulesType();
+    }
+
+    public int getPlayersCount() {
+        return playerCount;
+    }
+
+    public void setGameName(String gameName) {
+        this.gameName = gameName;
+    }
+
+    public String getGameName() {
+        return gameName;
     }
 }

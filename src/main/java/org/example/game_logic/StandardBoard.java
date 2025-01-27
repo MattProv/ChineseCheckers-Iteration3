@@ -196,4 +196,9 @@ public final class StandardBoard extends Board implements Serializable, Cloneabl
         cloned.lastMove = this.lastMove; // Copy the last move
         return cloned;
     }
+
+    @Override
+    public BoardType getBoardType() {
+        return BoardType.STANDARD;
+    }
 }

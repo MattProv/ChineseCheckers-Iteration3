@@ -3,7 +3,7 @@ package org.example.server.db;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 @Service
 public class GameService {
@@ -14,25 +14,27 @@ public class GameService {
         this.gameRepository = gameRepository;
     }
 
-    public GameCollection startNewGame() {
-        GameCollection game = new GameCollection();
+    public GameDocument startNewGame() {
+        GameDocument game = new GameDocument();
         game.setStartTime(LocalDateTime.now());
         return gameRepository.save(game);
     }
 
-    public void saveMove(String gameId, Move move) {
-        Optional<GameCollection> optionalGame = gameRepository.findById(gameId);
-        if (optionalGame.isPresent()) {
-            GameCollection game = optionalGame.get();
-            game.getMoves().add(move);
-            gameRepository.save(game);
-        } else {
-            throw new IllegalArgumentException("Game not found");
-        }
+    public void saveMove(GameDocument game, Move move) {
+        game.getMoves().add(move);
+        gameRepository.save(game);
     }
 
-    public GameCollection getGame(String gameId) {
+    public GameDocument getGame(String gameId) {
         return gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+    }
+
+    public List<GameDocument> getAllGames() {
+        return gameRepository.findAll();
+    }
+
+    public void saveGame(GameDocument game) {
+        gameRepository.save(game);
     }
 }

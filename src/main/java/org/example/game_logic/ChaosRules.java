@@ -90,6 +90,11 @@ public class ChaosRules implements Rules<StandardBoard> {
         return board;
     }
 
+    @Override
+    public RulesType getRulesType() {
+        return RulesType.CHAOS;
+    }
+
     /**
      * Validates a move based on the current state of the board and the rules of the game.
      * This method checks step and hop moves, ensuring that all conditions are met before allowing a move.

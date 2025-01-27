@@ -193,4 +193,6 @@ public abstract class Board implements Serializable, Cloneable {
 
         return cloned;
     }
+
+    public abstract BoardType getBoardType();
 }

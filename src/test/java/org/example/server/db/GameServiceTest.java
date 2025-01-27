@@ -16,14 +16,14 @@ public class GameServiceTest {
     @Test
     public void testGameFlow() {
         // Rozpoczęcie gry
-        GameCollection game = gameService.startNewGame();
+        GameDocument game = gameService.startNewGame();
 
         // Dodanie ruchów
-        gameService.saveMove(game.getId(), new Move(new Coordinate(1, 1), new Coordinate(2, 2)));
-        gameService.saveMove(game.getId(), new Move(new Coordinate(2, 2), new Coordinate(3, 3)));
+        gameService.saveMove(game, new Move(new Coordinate(1, 1), new Coordinate(2, 2)));
+        gameService.saveMove(game, new Move(new Coordinate(2, 2), new Coordinate(3, 3)));
 
         // Pobranie gry z bazy
-        GameCollection loadedGame = gameService.getGame(game.getId());
+        GameDocument loadedGame = gameService.getGame(game.getId());
 
         // Weryfikacja
         System.out.println("Liczba ruchów: " + loadedGame.getMoves().size()); // Powinno być 2

@@ -14,6 +14,10 @@ public class Move {
         this.end = endPosition;
     }
 
+    public static Move fromMove(org.example.game_logic.Move move) {
+        return new Move(move.getStart().getCoordinate(), move.getEnd().getCoordinate());
+    }
+
     public void setStartPosition(Coordinate startPosition) {
         this.start = startPosition;
     }
