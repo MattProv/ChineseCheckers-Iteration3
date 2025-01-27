@@ -349,6 +349,7 @@ public final class GameManager {
 
     public void setGameName(String gameName) {
         this.gameName = gameName;
+        gameManagerCallbackHandler.onGameNameChanged(gameName);
     }
 
     public String getGameName() {

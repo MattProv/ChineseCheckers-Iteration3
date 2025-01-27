@@ -102,6 +102,16 @@ public class ClientMainGUI extends Application {
             public void onChangeRulesType(RulesType rulesType) {
                 client.send(new RulesTypeMessage(rulesType));
             }
+
+            @Override
+            public void onSetGameToBeLoaded(String gameName) {
+                client.send(new GameToBeLoadedMessage(gameName));
+            }
+
+            @Override
+            public void onChangeGameName(String gameName) {
+                client.send(new GameNameMessage(gameName));
+            }
         });
 
         gameScreen.setCallbacksHandler(new GameScreen.CallbacksHandler() {

@@ -30,6 +30,8 @@ public class LobbyScreen extends BorderPane {
         public abstract void onError(String message);
         public abstract void onChangeBoardType(BoardType boardType);
         public abstract void onChangeRulesType(RulesType rulesType);
+        public abstract void onSetGameToBeLoaded(String gameName);
+        public abstract void onChangeGameName(String gameName);
     }
 
     private CallbacksHandler callbacksHandler;
@@ -95,6 +97,22 @@ public class LobbyScreen extends BorderPane {
             }
         });
 
+        Label savedGameNameLabel = new Label("Saved game name");
+        TextField savedGameNameField = new TextField();
+        savedGameNameField.setPromptText("Leave empty to not save");
+        Button updateSavedGameNameButton = new Button("Update");
+        updateSavedGameNameButton.setOnAction(e -> {
+            callbacksHandler.onChangeGameName(savedGameNameField.getText());
+        });
+
+        Label gameToBeLoadedName = new Label("Game to be loaded");
+        TextField gameToBeLoadedNameField = new TextField();
+        gameToBeLoadedNameField.setPromptText("Enter name of game to be loaded");
+        Button updateGameToBeLoadedButton = new Button("Update");
+        updateGameToBeLoadedButton.setOnAction(e -> {
+            callbacksHandler.onSetGameToBeLoaded(gameToBeLoadedNameField.getText());
+        });
+
         options.add(playerCountLabel, 0, 0);
         options.add(playerCountField, 1, 0);
         options.add(updatePlayerCountButton, 2, 0);
@@ -106,6 +124,14 @@ public class LobbyScreen extends BorderPane {
         options.add(rulesTypeLabel, 0, 2);
         options.add(rulesTypeComboBox, 1, 2);
         options.add(updateRulesTypeButton, 2, 2);
+
+        options.add(savedGameNameLabel, 0, 3);
+        options.add(savedGameNameField, 1, 3);
+        options.add(updateSavedGameNameButton, 2, 3);
+
+        options.add(gameToBeLoadedName, 0, 4);
+        options.add(gameToBeLoadedNameField, 1, 4);
+        options.add(updateGameToBeLoadedButton, 2, 4);
 
         Button startGameButton = new Button("Start game");
         startGameButton.setOnAction(e -> callbacksHandler.onGameStart());

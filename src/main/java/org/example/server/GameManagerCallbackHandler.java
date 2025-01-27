@@ -76,4 +76,9 @@ public class GameManagerCallbackHandler {
         System.out.println("Turn changed from " + oldTurn + " to " + currentTurn);
         Server.getServer().Broadcast(new StringMessage("Turn changed from " + oldTurn + " to " + currentTurn));
     }
+
+    public void onGameNameChanged(String gameName) {
+        System.out.println("Game name changed to " + gameName);
+        Server.getServer().Broadcast(new StringMessage("Game name changed to " + gameName));
+    }
 }
