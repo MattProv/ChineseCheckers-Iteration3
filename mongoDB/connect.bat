@@ -1,0 +1,1 @@
+mongosh -u admin -p password
