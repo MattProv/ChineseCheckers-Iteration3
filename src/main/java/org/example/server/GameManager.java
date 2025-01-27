@@ -4,6 +4,7 @@ import org.example.GameState;
 import org.example.game_logic.*;
 import org.example.message.GameStateMessage;
 import org.example.message.UserlistMessage;
+import org.example.server.db.GameDocument;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,9 @@ public final class GameManager {
     private Rules ruleset = new StandardRules();
     public GameManagerCallbackHandler gameManagerCallbackHandler = new GameManagerCallbackHandler();
 
+    // Game saving and loading
     private String gameName;
+    private GameDocument gameToBeLoaded;
 
     /**
      * Private constructor for Singleton design pattern.
@@ -50,6 +53,7 @@ public final class GameManager {
             gameManagerCallbackHandler.onRulesNotChanged("Game already running!");
             return;
         }
+        gameToBeLoaded = null;
         this.ruleset = ruleset;
         gameManagerCallbackHandler.onRulesChanged("Rules changed!");
     }
@@ -113,7 +117,17 @@ public final class GameManager {
         ruleset.setupBoard(gameState.getBoard(), agents);
         gameState.setRunning(true);
 
-        agents.get(0).promptMove(gameState.getBoard());
+        if(gameToBeLoaded != null) {
+            gameToBeLoaded.getMoves().forEach(move -> {
+                Move m = new Move(gameState.getBoard().getNode(move.getStartPosition()), gameState.getBoard().getNode(move.getEndPosition()));
+                gameState.getBoard().move(m);
+            });
+
+            currentTurn = gameToBeLoaded.getCurrentTurn();
+            gameToBeLoaded = null;
+        }
+
+        agents.get(currentTurn).promptMove(gameState.getBoard());
 
         synchronizeGameState();
 
@@ -132,6 +146,8 @@ public final class GameManager {
             gameManagerCallbackHandler.onBoardNotChanged("Game already running!");
             return false;
         }
+
+        gameToBeLoaded = null;
         gameState.setBoard(board);
         gameManagerCallbackHandler.onBoardChanged("Board set!");
 
@@ -149,10 +165,12 @@ public final class GameManager {
             gameManagerCallbackHandler.onPlayerCountNotChanged(playerCount, "Game already running!");
             return false;
         }
-        if (playerCount == 5 || playerCount > 6 || playerCount < 2) {
+        if (!ruleset.validatePlayerCount(playerCount)) {
             gameManagerCallbackHandler.onPlayerCountNotChanged(playerCount, "Invalid player count!");
             return false;
         }
+
+        gameToBeLoaded = null;
         gameManagerCallbackHandler.onPlayerCountChanged(this.playerCount, playerCount);
         this.playerCount = playerCount;
         return true;
@@ -308,9 +326,11 @@ public final class GameManager {
             gameManagerCallbackHandler.onGameEnded(agents.get(currentTurn));
             return;
         }
-
+        Agent oldTurn = agents.get(currentTurn);
         currentTurn = (currentTurn + 1) % agents.size();
         synchronizeGameState();
+
+        gameManagerCallbackHandler.onTurnChange(oldTurn, agents.get(currentTurn), currentTurn);
 
         agents.get(currentTurn).promptMove(gameState.getBoard());
     }
@@ -333,5 +353,24 @@ public final class GameManager {
 
     public String getGameName() {
         return gameName;
+    }
+
+    public void setGameToBeLoaded(GameDocument gameToBeLoaded) {
+        if(gameState.isRunning()) {
+            gameManagerCallbackHandler.onGameNotLoaded("Game already running!");
+            return;
+        }
+
+        playerCount = gameToBeLoaded.getPlayersCount();
+        ruleset = gameToBeLoaded.getRulesType().createRules();
+        gameState.setBoard(gameToBeLoaded.getBoardType().createBoard());
+
+        gameManagerCallbackHandler.onGameLoaded(gameToBeLoaded.getName());
+
+        this.gameToBeLoaded = gameToBeLoaded;
+    }
+
+    public GameDocument getGameToBeLoaded() {
+        return gameToBeLoaded;
     }
 }

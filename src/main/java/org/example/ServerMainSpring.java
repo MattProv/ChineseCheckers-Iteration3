@@ -53,6 +53,7 @@ public class ServerMainSpring implements CommandLineRunner {
                     game.setBoardType(gameManager.getBoardType());
                     game.setRulesType(gameManager.getRulesType());
                     game.setPlayersCount(gameManager.getPlayersCount());
+                    game.setName(gameManager.getGameName());
 
                     gameService.saveGame(game);
                 }
@@ -64,6 +65,16 @@ public class ServerMainSpring implements CommandLineRunner {
 
                 if(isSaved){
                     gameService.saveMove(game, org.example.server.db.Move.fromMove(move));
+                }
+            }
+
+            @Override
+            public void onTurnChange(Agent oldTurn, Agent currentTurn, int turnIndex) {
+                super.onTurnChange(oldTurn, currentTurn, turnIndex);
+
+                if(isSaved){
+                    game.setCurrentTurn(turnIndex);
+                    gameService.saveGame(game);
                 }
             }
         };

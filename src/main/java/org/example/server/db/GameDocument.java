@@ -19,6 +19,7 @@ public class GameDocument {
     private int playersCount;
     private BoardType boardType;
     private RulesType rulesType;
+    private int currentTurn;
     private List<Move> moves = new ArrayList<>();
 
     // Gettery i settery
@@ -74,6 +75,14 @@ public class GameDocument {
 
     public List<Move> getMoves() {
         return moves;
+    }
+
+    public int getCurrentTurn() {
+        return currentTurn;
+    }
+
+    public void setCurrentTurn(int currentTurn) {
+        this.currentTurn = currentTurn;
     }
 }
 

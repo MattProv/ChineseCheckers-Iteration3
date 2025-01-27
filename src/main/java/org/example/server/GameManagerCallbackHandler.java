@@ -61,4 +61,19 @@ public class GameManagerCallbackHandler {
         System.out.println("Valid move by " + agent + ": " + s);
         Server.getServer().Broadcast(new StringMessage("Valid move by " + agent + ": " + s));
     }
+
+    public void onGameNotLoaded(String reason) {
+        System.out.println("Game not loaded: " + reason);
+        Server.getServer().Broadcast(new StringMessage("Game not loaded: " + reason));
+    }
+
+    public void onGameLoaded(String gameName) {
+        System.out.println("Game loaded: " + gameName);
+        Server.getServer().Broadcast(new StringMessage("Game loaded: " + gameName));
+    }
+
+    public void onTurnChange(Agent oldTurn, Agent currentTurn, int turnIndex) {
+        System.out.println("Turn changed from " + oldTurn + " to " + currentTurn);
+        Server.getServer().Broadcast(new StringMessage("Turn changed from " + oldTurn + " to " + currentTurn));
+    }
 }
