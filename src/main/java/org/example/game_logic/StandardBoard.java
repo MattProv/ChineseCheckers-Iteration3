@@ -64,7 +64,7 @@ public final class StandardBoard extends Board implements Serializable, Cloneabl
      */
     @Override
     public void defineBases() {
-        // BASE 0, counting clockwise from the bottom
+        // BASE 0, counting counterclockwise from the top
         assignBaseToNode(new Coordinate(12,0),0);
         assignBaseToNode(new Coordinate(11,1),0);
         assignBaseToNode(new Coordinate(13,1),0);
@@ -92,13 +92,13 @@ public final class StandardBoard extends Board implements Serializable, Cloneabl
         assignBaseToNode(new Coordinate(0,12),2);
         assignBaseToNode(new Coordinate(1,11),2);
         assignBaseToNode(new Coordinate(2,12),2);
+        assignBaseToNode(new Coordinate(2,10),2);
         assignBaseToNode(new Coordinate(3,11),2);
         assignBaseToNode(new Coordinate(4,12),2);
-        assignBaseToNode(new Coordinate(2,10),2);
-        assignBaseToNode(new Coordinate(6,12),2);
-        assignBaseToNode(new Coordinate(5,11),2);
-        assignBaseToNode(new Coordinate(4,10),2);
         assignBaseToNode(new Coordinate(3,9),2);
+        assignBaseToNode(new Coordinate(4,10),2);
+        assignBaseToNode(new Coordinate(5,11),2);
+        assignBaseToNode(new Coordinate(6,12),2);
 
         // BASE 3
         assignBaseToNode(new Coordinate(12,16),3);

@@ -14,6 +14,8 @@ public class Bot extends Agent {
     }
 
     private Node UpdateTarget(Board board) {
+        reachedTargets.removeIf(node -> !node.getIsOccupied());
+        reachedTargets.removeIf(node -> node.getOccupant().getOwner() != this);
         if (currentTarget == null) {
             for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
                 if (reachedTargets.contains(node)) {
@@ -33,10 +35,17 @@ public class Bot extends Agent {
                 }
             }
         }
-        if (!reachedTargets.contains(currentTarget) && currentTarget != null) {
-            return currentTarget; //If the current target wasn't reached, no need to update
-        }
-        return null; //If all nodes in base are occupied, set null as the game has ended for that bot
+        if (currentTarget.getIsOccupied())
+            if (currentTarget.getOccupant().getOwner() != this) { //switch target, but don't mark as reached
+                for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
+                    if (reachedTargets.contains(node) || node == currentTarget) {
+                        continue; //Node was already reached or is occupied
+                    }
+                    return node;
+                }
+            }
+        //If the current target wasn't reached, no need to update
+        return currentTarget; //If all nodes in base are occupied, set null as the game has ended for that bot
     }
 
     public List<Move> getAllValidMoves(Board board) {
@@ -105,6 +114,12 @@ public class Bot extends Agent {
     public Move findBestMove(Board board) {
         List<Move> validMoves = getAllValidMoves(board);
         List<Move> filteredMoves = new ArrayList<>(validMoves);
+        // If a move allows a new pawn into base, do it
+        for (Move move : filteredMoves) {
+            if (move.getStart().getBaseId() != this.getFinishBaseIndex() &&
+                    move.getEnd().getBaseId() == this.getFinishBaseIndex())
+                return move;
+        }
         // 1. Get rid of backward moves
         System.out.println(validMoves.size() + " valid moves left, removing for moving backwards...");
         for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
@@ -124,6 +139,8 @@ public class Bot extends Agent {
         for (Move move : validMoves) {
             int progress = board.calculateDistance(move.getStart(), currentTarget) -
                     board.calculateDistance(move.getEnd(), currentTarget);
+            if (reachedTargets.contains(move.getStart()))
+                progress = 0;
             System.out.println("Move " + move.toString() + " progress: " + progress);
             maxProgress = Math.max(maxProgress, progress);
         }
@@ -139,6 +156,23 @@ public class Bot extends Agent {
         if (filteredMoves.isEmpty()) return validMoves.get(0);
 
         validMoves = new ArrayList<>(filteredMoves);
+
+        // A very specific edge case, when pawns at the edge of the base clog up the exit and no one makes progress
+        if (maxProgress == 0) {
+            System.out.println(validMoves.size() + "Looking for the clogging...");
+            for (Move move : filteredMoves) {
+                if (move.getStart().getBaseId() == this.getFinishBaseIndex()) {
+                    System.out.println(move.toString() + " starts in base...");
+                    if (move.getEnd().getBaseId() == this.getFinishBaseIndex()) {
+                        System.out.println(move.toString() + " ends in base...");
+                        if (!move.getStart().getNeighbours().contains(move.getEnd())) {
+                            System.out.println(move.toString() + "And is a jump.");
+                            return move;
+                        }
+                    }
+                }
+            }
+        }
 
         // 3. For all moves of optimal progress, first we want to move pawns at the back
         System.out.println(validMoves.size() + " valid moves left, removing for rushing...");
