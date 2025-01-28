@@ -50,6 +50,10 @@ public class Pawn implements Serializable, Cloneable {
         this.isBaseLocked = true;
     }
 
+    public void makeNotBaseLocked() {
+        this.isBaseLocked = false;
+    }
+
     /**
      * Returns whether the pawn is locked at its base.
      *
@@ -76,56 +80,6 @@ public class Pawn implements Serializable, Cloneable {
     public Node getLocation() {
         return location;
     }
-
-    public List<Move> getAllValidMoves(Board board) {
-        List<Move> validMoves = new ArrayList<>();
-        Node startPosition = this.getLocation();
-
-        // Get all direct neighbors of the pawn's current position
-        List<Node> neighbors = this.location.getNeighbours();
-
-        // Check all direct moves
-        for (Node neighbor : neighbors) {
-            if (!neighbor.getIsOccupied()) { // Check if the neighbor is empty
-                validMoves.add(new Move(startPosition, neighbor));
-            }
-        }
-
-        // Check all jump moves (recursive search for multi-jumps)
-        findJumpMoves(board, startPosition, new ArrayList<>(), validMoves);
-        System.out.println(startPosition.printCoordinates());
-        System.out.println("Can move to:");
-        for (Move move : validMoves) {
-            move.getEnd().printCoordinates();
-        }
-        return validMoves;
-    }
-
-    private void findJumpMoves(Board board, Node currentPosition,
-                               List<Node> visited, List<Move> validMoves) {
-        // Mark the current position as visited to avoid cycles
-        visited.add(currentPosition);
-
-        // Get all direct neighbors
-        List<Node> neighbors = currentPosition.getNeighbours();
-
-        for (Node neighbor : neighbors) {
-            Node jumpPosition = board.getNode(new Coordinate((currentPosition.getXCoordinate() - neighbor.getXCoordinate() )*2,
-                    (currentPosition.getYCoordinate() - neighbor.getYCoordinate())*2));
-
-            // Check if the jump is valid: neighbor is occupied, and jumpPosition is empty
-            if (!neighbor.getIsOccupied() && jumpPosition.getIsOccupied()
-                    && !visited.contains(jumpPosition)) {
-
-                Move jumpMove = new Move(currentPosition, jumpPosition);
-                validMoves.add(jumpMove);
-
-                // Recursively search for further jumps
-                findJumpMoves(board, jumpPosition, new ArrayList<>(visited), validMoves);
-            }
-        }
-    }
-
 
     /**
      * Creates a clone of the pawn, copying its base lock status.
