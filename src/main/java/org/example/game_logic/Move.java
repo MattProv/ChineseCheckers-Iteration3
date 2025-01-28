@@ -40,4 +40,9 @@ public class Move implements Serializable {
     public Node getEnd() {
         return endPosition;
     }
+
+    public String toString()
+    {
+        return startPosition.printCoordinates() + " -> " + endPosition.printCoordinates();
+    }
 }

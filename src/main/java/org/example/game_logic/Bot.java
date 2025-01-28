@@ -1,14 +1,14 @@
 package org.example.game_logic;
 
+import org.example.server.GameManager;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class Bot extends Agent {
-    static double STRAGGLING_PENALTY = 5.0;
-    static double ISOLATION_WEIGHT = 2.0;
-    static double TOTAL_PROGRESS_PENALTY = 0.1;
-    static double REACHING_GOAL_REWARD = 15.0;
     Node currentTarget;
-    List<Node> reachedTargets;
+    List<Node> reachedTargets = new ArrayList<>();
     public Bot(int id) {
         super(id, false);
     }
@@ -18,7 +18,7 @@ public class Bot extends Agent {
             return currentTarget; //If the current target wasn't reached, no need to update
         }
         for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
-            if (!reachedTargets.contains(node)) {
+            if (reachedTargets.contains(node)) {
                 continue; //Node was already reached
             }
             return node;
@@ -26,134 +26,165 @@ public class Bot extends Agent {
         return null; //If all nodes in base are occupied, set null as the game has ended for that bot
     }
 
-    public double totalDistancePenalty(Board board) {
-        double totalDistance = 0.0;
+    public List<Move> getAllValidMoves(Board board) {
+        List<Move> validMoves = new ArrayList<>();
         for (Pawn pawn : this.getPawns()) {
-            totalDistance += board.calculateDistance(pawn.getLocation(), currentTarget);
+            System.out.println("|||||||||| Checking for pawn " + pawn.getLocation().printCoordinates() + "|||||||||||");
+            if (reachedTargets.contains(pawn.getLocation())) {
+                continue; //Pawn is already on the finish, we don't want to touch it
+            }
+            Node startPosition = pawn.getLocation();
+            // Get all direct neighbors of the pawn's current position
+            List<Node> neighbors = pawn.getLocation().getNeighbours();
+
+            // Check all direct moves
+            for (Node neighbor : neighbors) {
+                System.out.println("Checking step move to " + neighbor.printCoordinates());
+                if (!neighbor.getIsOccupied()) {
+                    if (!pawn.isBaseLocked() || neighbor.getBaseId() == this.getFinishBaseIndex()) {
+                        System.out.println("Valid step");
+                        validMoves.add(new Move(startPosition, neighbor));
+                    }
+                }
+            }
+
+            // Check all jump moves (recursive search for multi-jumps)
+            findJumpMoves(board, startPosition, new ArrayList<>(), validMoves, pawn);
+            if (!validMoves.isEmpty()) {
+                System.out.println("Valid moves");
+                for (Move move : validMoves) {
+                    System.out.println(move.toString());
+                }
+            } else
+                System.out.println("Pawn" + pawn.getLocation().printCoordinates() + " can't move anywhere!");
         }
-        return -totalDistance * TOTAL_PROGRESS_PENALTY;
+        System.out.println("All valid moves found!");
+        return validMoves;
     }
 
-    public double rewardChainJumps(Board board, Agent agent) {
-        int chainJumpOpportunities = 0;
+    private void findJumpMoves(Board board, Node currentPosition,
+                               List<Node> visited, List<Move> validMoves, Pawn pawn) {
+        // Mark the current position as visited to avoid cycles
+        visited.add(currentPosition);
+        System.out.println("Jumping from " + currentPosition.printCoordinates());
+        // Get all direct neighbors
+        List<Node> neighbors = currentPosition.getNeighbours();
 
-        for (Pawn pawn : agent.getPawns()) {
-            List<Move> possibleMoves = pawn.getAllValidMoves(board);
-            for (Move move : possibleMoves) {
-                if (!pawn.getLocation().getNeighbours().contains(move.getEnd())) {
-                    chainJumpOpportunities++;
+        for (Node neighbor : neighbors) {
+            if (!neighbor.getIsOccupied())
+                continue; // Can only jump over occupied nodes
+            Node jumpPosition = board.getNode(new Coordinate(currentPosition.getXCoordinate() + ((neighbor.getXCoordinate() - currentPosition.getXCoordinate() )*2),
+                    currentPosition.getYCoordinate() + ((neighbor.getYCoordinate() - currentPosition.getYCoordinate())*2)));
+            if (jumpPosition == null)
+                continue;
+            System.out.println("Testing jump move to " + jumpPosition.printCoordinates());
+            if (!jumpPosition.getIsOccupied() && !visited.contains(jumpPosition)) {
+                if (!pawn.isBaseLocked() || jumpPosition.getBaseId() == this.getFinishBaseIndex()) {
+                    System.out.println("Valid move");
+                    Move jumpMove = new Move(pawn.getLocation(), jumpPosition);
+                    validMoves.add(jumpMove);
+                    System.out.println("Checking recursively from " + jumpPosition.printCoordinates());
+                    // Recursively search for further jumps
+                    findJumpMoves(board, jumpPosition, new ArrayList<>(visited), validMoves, pawn);
+                    System.out.println("Finished checking recursively from " + jumpPosition.printCoordinates());
                 }
             }
         }
-
-        return chainJumpOpportunities * 5; // Adjust weight as needed
     }
 
+    public Move findBestMove(Board board) {
+        List<Move> validMoves = getAllValidMoves(board);
+        List<Move> filteredMoves = new ArrayList<>(validMoves);
 
-    public double penalizeStragglingPawns(Board board) {
-        int totalDistance = 0;
-        int pawnCount = this.getPawns().size();
-
-        // Calculate average distance
-        for (Pawn pawn : this.getPawns()) {
-            totalDistance += board.calculateDistance(pawn.getLocation(), currentTarget);
-        }
-        double averageDistance = (double) totalDistance / pawnCount;
-
-        // Penalize pawns that are significantly behind
-        double penalty = 0.0;
-        for (Pawn pawn : this.getPawns()) {
-            if (board.calculateDistance(pawn.getLocation(), currentTarget) > averageDistance) {
-                penalty += (board.calculateDistance(pawn.getLocation(), currentTarget) - averageDistance) * STRAGGLING_PENALTY;
+        // 0. Unless we absolutely have to, we don't want to move pawns that reached a target
+        System.out.println(validMoves.size() + " valid moves left, removing for leaving targets...");
+        for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
+            Move move = iterator.next();
+            if (reachedTargets.contains(move.getStart()) && filteredMoves.size() > 1) {
+                System.out.println("Removing move " + move);
+                iterator.remove();
             }
         }
-        return -penalty;
-    }
+        if (filteredMoves.isEmpty()) return validMoves.get(0); // Return the first valid move as a fallback
 
-    public double evaluateClusterFormation() {
-        int isolatedPawns = 0;
-        for (Pawn pawn : this.getPawns()) {
-            for (Node node : pawn.getLocation().getNeighbours()) {
-                if (node.getOccupant() != null)
-                    if (node.getOccupant().getOwner() == pawn.getOwner())
-                        break;
-            }
-            isolatedPawns++;
-        }
-        return -isolatedPawns * ISOLATION_WEIGHT; // Adjust penalty as needed
-    }
+        validMoves = new ArrayList<>(filteredMoves);
 
-    public double rewardGoalZone() {
-        double goalBonus = 0.0;
-        for (Pawn pawn : this.getPawns()) {
-            if (pawn.isBaseLocked()) {
-                goalBonus += REACHING_GOAL_REWARD; // Reward for pawns in the goal
+        // 1. Get rid of backward moves
+        System.out.println(validMoves.size() + " valid moves left, removing for moving backwards...");
+        for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
+            Move move = iterator.next();
+            if (board.calculateDistance(move.getEnd(), currentTarget) >
+                    board.calculateDistance(move.getStart(), currentTarget) && filteredMoves.size() > 1) {
+                iterator.remove();
             }
         }
+        if (filteredMoves.isEmpty()) return validMoves.get(0);
 
-        return goalBonus;
-    }
+        validMoves = new ArrayList<>(filteredMoves);
 
-    public double EvaluateBoard(Board board) {
-        double move_value = 0.0;
-        move_value += totalDistancePenalty(board);
-        move_value += penalizeStragglingPawns(board);
-        move_value += evaluateClusterFormation();
-        move_value += rewardGoalZone();
-
-        return move_value;
-    }
-
-    public Move findBestMove(Board board, List<Agent> allPlayers, int depth) throws CloneNotSupportedException {
-        double bestValue = Integer.MIN_VALUE;
-        Move bestMove = null;
-        for (Pawn pawn : this.getPawns()) {
-            List<Move> possibleMoves = pawn.getAllValidMoves(board);
-            for (Move move : possibleMoves) {
-                Board clonedBoard = board.clone();
-                clonedBoard.move(move);
-
-                double value = minimax(clonedBoard, allPlayers, (allPlayers.indexOf(this) + 1) % allPlayers.size(), depth - 1);
-                if (value > bestValue) {
-                    bestValue = value;
-                    bestMove = move;
-                }
+        // 2. Get rid of moves that give us suboptimal progress
+        System.out.println(validMoves.size() + " valid moves left, removing for poor progress...");
+        int maxProgress = 0;
+        for (Move move : validMoves) {
+            int progress = board.calculateDistance(move.getStart(), currentTarget) -
+                    board.calculateDistance(move.getEnd(), currentTarget);
+            System.out.println("Move " + move.toString() + " progress: " + progress);
+            maxProgress = Math.max(maxProgress, progress);
+        }
+        for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
+            Move move = iterator.next();
+            if (board.calculateDistance(move.getStart(), currentTarget) -
+                    board.calculateDistance(move.getEnd(), currentTarget) < maxProgress && filteredMoves.size() > 1) {
+                System.out.println("Removing move " + move + " with progress " + (board.calculateDistance(move.getStart(), currentTarget) -
+                        board.calculateDistance(move.getEnd(), currentTarget)));
+                iterator.remove();
             }
         }
-        return bestMove;
-    }
+        if (filteredMoves.isEmpty()) return validMoves.get(0);
 
-    private double minimax(Board board, List<Agent> players, int playerIndex, int depth) throws CloneNotSupportedException {
-        if (depth == 0) {
-            return EvaluateBoard(board);
+        validMoves = new ArrayList<>(filteredMoves);
+
+        // 3. For all moves of optimal progress, first we want to move pawns at the back
+        System.out.println(validMoves.size() + " valid moves left, removing for rushing...");
+        int maxDistance = 0;
+        for (Move move : validMoves) {
+            int distance = board.calculateDistance(move.getStart(), currentTarget);
+            maxDistance = Math.max(maxDistance, distance);
         }
-
-        Agent nextPlayer = players.get(playerIndex);
-        double bestValue = (nextPlayer == this) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
-        for (Pawn pawn : nextPlayer.getPawns()) {
-            List<Move> possibleMoves = pawn.getAllValidMoves(board);
-            for (Move move : possibleMoves) {
-                Board clonedBoard = board.clone();
-                clonedBoard.move(move);
-
-                double value = minimax(clonedBoard, players, (playerIndex + 1) % players.size(), depth - 1);
-
-                if (nextPlayer == this) {
-                    bestValue = Math.max(bestValue, value); // Maximize for AI player
-                } else {
-                    bestValue = Math.min(bestValue, value); // Minimize for opponents
-                }
+        System.out.println("Max distance: " + maxDistance);
+        for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
+            Move move = iterator.next();
+            if (board.calculateDistance(move.getStart(), currentTarget) < maxDistance && filteredMoves.size() > 1) {
+                System.out.println("Removing move " + move + ", distance was " + board.calculateDistance(move.getStart(), currentTarget));
+                iterator.remove();
             }
         }
+        if (filteredMoves.isEmpty()) return validMoves.get(0);
 
-        return bestValue;
+        // 4. If we still have multiple candidates, return random
+        System.out.println(filteredMoves.size() + " valid moves left, choosing randomly...");
+        return RandomElement.getRandomElement(filteredMoves);
     }
+
 
 
     @Override
     public void promptMove(Board board) {
-        // TODO: finish this logic
-        // Move bestMove =
-        // GameManager.getInstance().makeMove(this, bestMove);
+        currentTarget = UpdateTarget(board);
+        if (currentTarget != null) {
+            System.out.println("Current target: " + currentTarget.printCoordinates());
+            Move bestMove = findBestMove(board);
+            if (bestMove != null) {
+                System.out.println("Chosen move: " + bestMove.toString());
+                GameManager.getInstance().makeMove(this, bestMove);
+            }
+            else {
+                System.out.println("Nowhere to move to!");
+            }
+        }
+        else {
+            System.out.println("Nowhere to move to!");
+        }
+        GameManager.getInstance().endTurn(this);
     }
 }
