@@ -336,9 +336,19 @@ public final class GameManager {
                 return;
             }
         }
+
+        progressTurn();
+    }
+
+    private void progressTurn() {
         Agent oldTurn = agents.get(currentTurn);
+        int startingTurn = currentTurn;
         do {
             currentTurn = (currentTurn + 1) % agents.size();
+            if (currentTurn == startingTurn) {
+                endGame();
+                return;
+            }
         }
         while (agents.get(currentTurn).getHasWon());
         synchronizeGameState();
@@ -346,6 +356,14 @@ public final class GameManager {
         gameManagerCallbackHandler.onTurnChange(oldTurn, agents.get(currentTurn), currentTurn);
 
         agents.get(currentTurn).promptMove(gameState.getBoard());
+    }
+
+    private void endGame() {
+        gameState.setRunning(false);
+        agents.clear();
+        playersFinished = 0;
+        currentTurn = 0;
+        synchronizeGameState();
     }
 
     public BoardType getBoardType() {
