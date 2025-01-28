@@ -1,5 +1,7 @@
 package org.example.game_logic;
 
+import org.example.server.GameManager;
+
 import java.util.List;
 
 public class Bot extends Agent {
@@ -7,13 +9,21 @@ public class Bot extends Agent {
     static double ISOLATION_WEIGHT = 2.0;
     static double TOTAL_PROGRESS_PENALTY = 0.1;
     static double REACHING_GOAL_REWARD = 15.0;
+    int depth = 5;
+    List<Agent> agents;
     Node currentTarget;
     List<Node> reachedTargets;
+
     public Bot(int id) {
         super(id, false);
     }
 
-    private Node UpdateTarget(Board board) {
+    @Override
+    public void setAgentList(List<Agent> agents) {
+        this.agents = agents;
+    }
+
+    private Node updateTarget(Board board) {
         if (reachedTargets.contains(currentTarget)) {
             return currentTarget; //If the current target wasn't reached, no need to update
         }
@@ -104,8 +114,10 @@ public class Bot extends Agent {
         return move_value;
     }
 
-    public Move findBestMove(Board board, List<Agent> allPlayers, int depth) throws CloneNotSupportedException {
+    public Move findBestMove(Board board) throws CloneNotSupportedException {
+        List<Agent> allPlayers = this.agents;
         double bestValue = Integer.MIN_VALUE;
+        int depth = this.depth;
         Move bestMove = null;
         for (Pawn pawn : this.getPawns()) {
             List<Move> possibleMoves = pawn.getAllValidMoves(board);
@@ -152,8 +164,15 @@ public class Bot extends Agent {
 
     @Override
     public void promptMove(Board board) {
-        // TODO: finish this logic
-        // Move bestMove =
-        // GameManager.getInstance().makeMove(this, bestMove);
+        updateTarget(board);
+        Move move;
+        try {
+            move = findBestMove(board);
+            GameManager.getInstance().makeMove(this, move);
+        }
+        catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("No move to be made!");
     }
 }

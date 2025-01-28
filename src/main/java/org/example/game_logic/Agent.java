@@ -239,4 +239,8 @@ public class Agent implements Serializable {
     public SerializableColor getColor() {
         return color;
     }
+
+    public void setAgentList(List<Agent> agents) {
+        return;
+    }
 }

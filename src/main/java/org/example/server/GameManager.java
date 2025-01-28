@@ -121,6 +121,11 @@ public final class GameManager {
         ruleset.setupBoard(gameState.getBoard(), agents);
         gameState.setRunning(true);
 
+        for (Agent agent : agents) {
+            if (!agent.isPlayer())
+                agent.setAgentList(agents);
+        }
+
         if(gameToBeLoaded != null) {
             gameToBeLoaded.getMoves().forEach(move -> {
                 Move m = new Move(gameState.getBoard().getNode(move.getStartPosition()), gameState.getBoard().getNode(move.getEndPosition()));
