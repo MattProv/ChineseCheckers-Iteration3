@@ -207,7 +207,7 @@ public final class GameManager {
             gameManagerCallbackHandler.onInvalidMove(agent, move, "You can't move another player's pawns!");
             return false;
         }
-        if (ruleset.validateMove(gameState.getBoard(), move)) {
+        if (ruleset.validateMove(gameState.getBoard(), move) || !agent.isPlayer()) {
             gameState.getBoard().move(move);
             synchronizeGameState();
             gameManagerCallbackHandler.onValidMove(agent, move, "Valid move!");
