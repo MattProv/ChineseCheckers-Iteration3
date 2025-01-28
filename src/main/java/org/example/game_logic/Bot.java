@@ -2,17 +2,18 @@ package org.example.game_logic;
 
 import org.example.server.GameManager;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Bot extends Agent {
-    static double STRAGGLING_PENALTY = 5.0;
-    static double ISOLATION_WEIGHT = 2.0;
-    static double TOTAL_PROGRESS_PENALTY = 0.1;
-    static double REACHING_GOAL_REWARD = 15.0;
-    int depth = 5;
+    static double STRAGGLING_PENALTY = 0.0;
+    static double ISOLATION_WEIGHT = 0.0;
+    static double TOTAL_PROGRESS_PENALTY = 10.0;
+    static double REACHING_GOAL_REWARD = 100.0;
+    int depth = 2;
     List<Agent> agents;
     Node currentTarget;
-    List<Node> reachedTargets;
+    List<Node> reachedTargets = new ArrayList<>();
 
     public Bot(int id) {
         super(id, false);
@@ -23,17 +24,17 @@ public class Bot extends Agent {
         this.agents = agents;
     }
 
-    private Node updateTarget(Board board) {
-        if (reachedTargets.contains(currentTarget)) {
-            return currentTarget; //If the current target wasn't reached, no need to update
+    private void updateTarget(Board board) {
+        if (reachedTargets.contains(this.currentTarget)) {
+            return; //If the current target wasn't reached, no need to update
         }
         for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
-            if (!reachedTargets.contains(node)) {
+            if (reachedTargets.contains(node)) {
                 continue; //Node was already reached
             }
-            return node;
+            this.currentTarget = node;
+            return;
         }
-        return null; //If all nodes in base are occupied, set null as the game has ended for that bot
     }
 
     public double totalDistancePenalty(Board board) {
@@ -120,9 +121,11 @@ public class Bot extends Agent {
         int depth = this.depth;
         Move bestMove = null;
         for (Pawn pawn : this.getPawns()) {
+            System.out.println("\n||||||||||||| Testing for pawn " + pawn.getLocation().printCoordinates() + " ||||||||||||||");
             List<Move> possibleMoves = pawn.getAllValidMoves(board);
             for (Move move : possibleMoves) {
                 Board clonedBoard = board.clone();
+                System.out.println("Testing move: " + move.toString());
                 clonedBoard.move(move);
 
                 double value = minimax(clonedBoard, allPlayers, (allPlayers.indexOf(this) + 1) % allPlayers.size(), depth - 1);
@@ -130,6 +133,7 @@ public class Bot extends Agent {
                     bestValue = value;
                     bestMove = move;
                 }
+                clonedBoard.revertMove(move);
             }
         }
         return bestMove;
@@ -141,20 +145,24 @@ public class Bot extends Agent {
         }
 
         Agent nextPlayer = players.get(playerIndex);
+        System.out.println("(Depth " + depth + ") Next move: " + nextPlayer.getColor().toString());
         double bestValue = (nextPlayer == this) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         for (Pawn pawn : nextPlayer.getPawns()) {
+            System.out.println("(Depth " + depth + ") Testing for pawn " + pawn.getLocation().printCoordinates() + "\n");
             List<Move> possibleMoves = pawn.getAllValidMoves(board);
             for (Move move : possibleMoves) {
                 Board clonedBoard = board.clone();
+                System.out.println("Testing move: " + move.toString());
                 clonedBoard.move(move);
 
                 double value = minimax(clonedBoard, players, (playerIndex + 1) % players.size(), depth - 1);
-
+                System.out.println(value);
                 if (nextPlayer == this) {
                     bestValue = Math.max(bestValue, value); // Maximize for AI player
                 } else {
                     bestValue = Math.min(bestValue, value); // Minimize for opponents
                 }
+                clonedBoard.revertMove(move);
             }
         }
 
@@ -164,15 +172,23 @@ public class Bot extends Agent {
 
     @Override
     public void promptMove(Board board) {
+        System.out.println("I was prompted to move!");
         updateTarget(board);
+        System.out.println("Current target: " + currentTarget.printCoordinates());
         Move move;
         try {
             move = findBestMove(board);
+            System.out.println("My move will be " + move.toString());
             GameManager.getInstance().makeMove(this, move);
+            GameManager.getInstance().endTurn(this);
+            return;
         }
-        catch (CloneNotSupportedException e) {
+        catch (CloneNotSupportedException | NullPointerException e) {
             e.printStackTrace();
+            System.out.println("No move to be made!");
+            GameManager.getInstance().endTurn(this);
         }
         System.out.println("No move to be made!");
+        GameManager.getInstance().endTurn(this);
     }
 }

@@ -36,6 +36,8 @@ public abstract class Board implements Serializable, Cloneable {
      */
     public abstract void move(Move move);
 
+    public abstract void revertMove(Move move);
+
     /**
      * Abstract method to display the current state of the board.
      * Must be implemented by subclasses.
@@ -133,6 +135,9 @@ public abstract class Board implements Serializable, Cloneable {
         Pawns.remove(start);
         if (end.getBaseId() == pawn.getOwner().getFinishBaseIndex()) {
             pawn.makeBaseLocked();
+        }
+        else if (end.getBaseId() == -1) {
+            pawn.makeNotBaseLocked();
         }
         Pawns.put(end, pawn);
         end.setOccupied(pawn);

@@ -50,6 +50,10 @@ public class Pawn implements Serializable, Cloneable {
         this.isBaseLocked = true;
     }
 
+    public void makeNotBaseLocked() {
+        this.isBaseLocked = false;
+    }
+
     /**
      * Returns whether the pawn is locked at its base.
      *
@@ -86,18 +90,23 @@ public class Pawn implements Serializable, Cloneable {
 
         // Check all direct moves
         for (Node neighbor : neighbors) {
-            if (!neighbor.getIsOccupied()) { // Check if the neighbor is empty
+            System.out.println("\nChecking step move to " + neighbor.printCoordinates());
+            if (!neighbor.getIsOccupied()) {
                 validMoves.add(new Move(startPosition, neighbor));
             }
         }
 
         // Check all jump moves (recursive search for multi-jumps)
         findJumpMoves(board, startPosition, new ArrayList<>(), validMoves);
-        System.out.println(startPosition.printCoordinates());
-        System.out.println("Can move to:");
-        for (Move move : validMoves) {
-            move.getEnd().printCoordinates();
+        if (!validMoves.isEmpty()) {
+            System.out.println("Pawn" + this.location.printCoordinates() + " has " + validMoves.size() + " valid moves.");
+            System.out.println("Pawn" + this.location.printCoordinates() + " can move to:");
+            for (Move move : validMoves) {
+                System.out.println(move.getEnd().printCoordinates());
+            }
         }
+        else
+            System.out.println("Pawn" + this.location.printCoordinates() + " can't move anywhere!");
         return validMoves;
     }
 
@@ -105,23 +114,27 @@ public class Pawn implements Serializable, Cloneable {
                                List<Node> visited, List<Move> validMoves) {
         // Mark the current position as visited to avoid cycles
         visited.add(currentPosition);
-
+        System.out.println("Jumping from " + currentPosition.printCoordinates());
         // Get all direct neighbors
         List<Node> neighbors = currentPosition.getNeighbours();
 
         for (Node neighbor : neighbors) {
-            Node jumpPosition = board.getNode(new Coordinate((currentPosition.getXCoordinate() - neighbor.getXCoordinate() )*2,
-                    (currentPosition.getYCoordinate() - neighbor.getYCoordinate())*2));
-
+            if (!neighbor.getIsOccupied())
+                continue; // Can only jump over occupied nodes
+            Node jumpPosition = board.getNode(new Coordinate(currentPosition.getXCoordinate() + ((neighbor.getXCoordinate() - currentPosition.getXCoordinate() )*2),
+                    currentPosition.getYCoordinate() + ((neighbor.getYCoordinate() - currentPosition.getYCoordinate())*2)));
+            if (jumpPosition == null)
+                continue;
+            System.out.println("Testing jump move to " + jumpPosition.printCoordinates());
             // Check if the jump is valid: neighbor is occupied, and jumpPosition is empty
-            if (!neighbor.getIsOccupied() && jumpPosition.getIsOccupied()
-                    && !visited.contains(jumpPosition)) {
-
-                Move jumpMove = new Move(currentPosition, jumpPosition);
+            if (!jumpPosition.getIsOccupied() && !visited.contains(jumpPosition)) {
+                System.out.println("Valid move");
+                Move jumpMove = new Move(this.location, jumpPosition);
                 validMoves.add(jumpMove);
-
+                System.out.println("Checking recursively from " + jumpPosition.printCoordinates());
                 // Recursively search for further jumps
                 findJumpMoves(board, jumpPosition, new ArrayList<>(visited), validMoves);
+                System.out.println("Finished checking recursively from " + jumpPosition.printCoordinates());
             }
         }
     }

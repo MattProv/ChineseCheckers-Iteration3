@@ -167,7 +167,18 @@ public final class StandardBoard extends Board implements Serializable, Cloneabl
         this.updatePawnPosition(move.getStart(), move.getEnd());
         moves.add(move);
         lastMove = move.getStart() + " -> " + move.getEnd();
-        System.out.println("Move " + lastMove);
+        System.out.println("Move " + move.toString());
+    }
+
+    @Override
+    public void revertMove(final Move move) {
+        if (this.getPawn(move.getEnd()) == null) {
+            throw new IllegalStateException("No pawn at the starting node!");
+        }
+        this.getPawn(move.getEnd()).updatePosition(move.getStart());
+        this.updatePawnPosition(move.getEnd(), move.getStart());
+        moves.remove(move);
+        System.out.println("Revert move " + move.toString());
     }
 
     /**
@@ -179,7 +190,7 @@ public final class StandardBoard extends Board implements Serializable, Cloneabl
         System.out.println("Last move: " + lastMove);
         System.out.println("MOVES:");
         for (Move move : moves) {
-            System.out.println("Move " + move.getStart() + " to " + move.getEnd());
+            System.out.println(move.toString());
         }
     }
 
