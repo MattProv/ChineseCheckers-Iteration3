@@ -1,10 +1,7 @@
 package org.example.game_logic;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Abstract representation of a game board.
@@ -148,15 +145,38 @@ public abstract class Board implements Serializable, Cloneable {
         Bases.computeIfAbsent(baseId, k -> new HashSet<>()).add(Nodes.get(coordinate));
     }
 
-    public int calculateDistance(Node start, Node end) {
-        for (int i = 0; i < 16; i++) {
-            for (int x = start.getXCoordinate() - 2*i; x <= end.getXCoordinate() + 2*i; x++) {
-                for (int y = start.getYCoordinate() - i; y <= end.getYCoordinate() + i; y++) {
-                    if (this.getNode(new Coordinate(x, y)) == end)
-                        return i;
+    public static int calculateDistance(Node startNode, Node endNode) {
+        if (startNode.equals(endNode)) return 0; // Start and end are the same node
+
+        Set<Node> checkedNodes = new HashSet<>();
+        Queue<Node> queue = new LinkedList<>();
+        Map<Node, Integer> distances = new HashMap<>(); // Track distances
+
+        // Initialize BFS
+        queue.add(startNode);
+        checkedNodes.add(startNode);
+        distances.put(startNode, 0);
+
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+            int currentDistance = distances.get(current);
+
+            // Explore neighbors
+            for (Node neighbor : current.getNeighbours()) {
+                if (!checkedNodes.contains(neighbor)) {
+                    queue.add(neighbor);
+                    checkedNodes.add(neighbor);
+                    distances.put(neighbor, currentDistance + 1);
+
+                    // If we found the end node, return its distance
+                    if (neighbor.equals(endNode)) {
+                        return distances.get(neighbor);
+                    }
                 }
             }
         }
+
+        // If we exhaust the BFS without finding the end node, return -1 (no path exists)
         return -1;
     }
 
