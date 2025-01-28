@@ -14,14 +14,27 @@ public class Bot extends Agent {
     }
 
     private Node UpdateTarget(Board board) {
-        if (reachedTargets.contains(currentTarget)) {
+        if (!reachedTargets.contains(currentTarget) && currentTarget != null) {
             return currentTarget; //If the current target wasn't reached, no need to update
         }
-        for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
-            if (reachedTargets.contains(node)) {
-                continue; //Node was already reached
+        if (currentTarget == null) {
+            for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
+                if (reachedTargets.contains(node)) {
+                    continue; //Node was already reached
+                }
+                return node;
             }
-            return node;
+        }
+        for (Pawn pawn : getPawns()) {
+            if (pawn.getLocation() == currentTarget) {
+                reachedTargets.add(currentTarget);
+                for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
+                    if (reachedTargets.contains(node)) {
+                        continue; //Node was already reached
+                    }
+                    return node;
+                }
+            }
         }
         return null; //If all nodes in base are occupied, set null as the game has ended for that bot
     }
@@ -183,7 +196,7 @@ public class Bot extends Agent {
             }
         }
         else {
-            System.out.println("Nowhere to move to!");
+            System.out.println("No target set!");
         }
         GameManager.getInstance().endTurn(this);
     }
