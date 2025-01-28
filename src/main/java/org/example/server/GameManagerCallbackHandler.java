@@ -9,9 +9,9 @@ public class GameManagerCallbackHandler {
         System.out.println("Game started");
         Server.getServer().Broadcast(new StringMessage("Game started!"));
     }
-    public void onGameEnded(Agent agent) {
+    public void onGameEnded() {
         System.out.println("Game ended");
-        Server.getServer().Broadcast(new StringMessage("Game ended! " + agent + " won!"));
+        Server.getServer().Broadcast(new StringMessage("Game ended!"));
     }
 
     public void onGameNotStarted(String reason)
@@ -85,5 +85,16 @@ public class GameManagerCallbackHandler {
     public void onBotsCountChanged(int botsCount) {
         System.out.println("Bots count changed to " + botsCount);
         Server.getServer().Broadcast(new StringMessage("Bots count changed to " + botsCount));
+    }
+
+    public void onPlayerFinished(Agent agent, int position) {
+        if (position == 1) {
+            System.out.println("We have a winner: " + agent);
+            Server.getServer().Broadcast(new StringMessage(agent + " has won!"));
+        }
+        else {
+            System.out.println("Player finished: " + agent);
+            Server.getServer().Broadcast(new StringMessage(agent + " takes " + position + " place!"));
+        }
     }
 }

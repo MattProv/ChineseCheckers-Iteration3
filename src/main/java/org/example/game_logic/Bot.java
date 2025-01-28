@@ -14,9 +14,6 @@ public class Bot extends Agent {
     }
 
     private Node UpdateTarget(Board board) {
-        if (!reachedTargets.contains(currentTarget) && currentTarget != null) {
-            return currentTarget; //If the current target wasn't reached, no need to update
-        }
         if (currentTarget == null) {
             for (Node node : board.getBases().get(this.getFinishBaseIndex())) {
                 if (reachedTargets.contains(node)) {
@@ -36,6 +33,9 @@ public class Bot extends Agent {
                 }
             }
         }
+        if (!reachedTargets.contains(currentTarget) && currentTarget != null) {
+            return currentTarget; //If the current target wasn't reached, no need to update
+        }
         return null; //If all nodes in base are occupied, set null as the game has ended for that bot
     }
 
@@ -43,9 +43,6 @@ public class Bot extends Agent {
         List<Move> validMoves = new ArrayList<>();
         for (Pawn pawn : this.getPawns()) {
             System.out.println("|||||||||| Checking for pawn " + pawn.getLocation().printCoordinates() + "|||||||||||");
-            if (reachedTargets.contains(pawn.getLocation())) {
-                continue; //Pawn is already on the finish, we don't want to touch it
-            }
             Node startPosition = pawn.getLocation();
             // Get all direct neighbors of the pawn's current position
             List<Node> neighbors = pawn.getLocation().getNeighbours();
@@ -108,20 +105,6 @@ public class Bot extends Agent {
     public Move findBestMove(Board board) {
         List<Move> validMoves = getAllValidMoves(board);
         List<Move> filteredMoves = new ArrayList<>(validMoves);
-
-        // 0. Unless we absolutely have to, we don't want to move pawns that reached a target
-        System.out.println(validMoves.size() + " valid moves left, removing for leaving targets...");
-        for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
-            Move move = iterator.next();
-            if (reachedTargets.contains(move.getStart()) && filteredMoves.size() > 1) {
-                System.out.println("Removing move " + move);
-                iterator.remove();
-            }
-        }
-        if (filteredMoves.isEmpty()) return validMoves.get(0); // Return the first valid move as a fallback
-
-        validMoves = new ArrayList<>(filteredMoves);
-
         // 1. Get rid of backward moves
         System.out.println(validMoves.size() + " valid moves left, removing for moving backwards...");
         for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
@@ -174,7 +157,21 @@ public class Bot extends Agent {
         }
         if (filteredMoves.isEmpty()) return validMoves.get(0);
 
-        // 4. If we still have multiple candidates, return random
+        // 4. Unless we absolutely have to, we don't want to move pawns that reached a target
+        System.out.println(validMoves.size() + " valid moves left, removing for leaving targets...");
+        for (Iterator<Move> iterator = filteredMoves.iterator(); iterator.hasNext(); ) {
+            Move move = iterator.next();
+            if (reachedTargets.contains(move.getStart()) && filteredMoves.size() > 1) {
+                System.out.println("Removing move " + move);
+                iterator.remove();
+            }
+        }
+        if (filteredMoves.isEmpty()) return validMoves.get(0); // Return the first valid move as a fallback
+
+        validMoves = new ArrayList<>(filteredMoves);
+
+
+        // 5. If we still have multiple candidates, return random
         System.out.println(filteredMoves.size() + " valid moves left, choosing randomly...");
         return RandomElement.getRandomElement(filteredMoves);
     }
@@ -183,6 +180,12 @@ public class Bot extends Agent {
 
     @Override
     public void promptMove(Board board) {
+        try {
+            // Simulate thinking for 3 seconds
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            System.out.println("Thread interrupted!");
+        }
         currentTarget = UpdateTarget(board);
         if (currentTarget != null) {
             System.out.println("Current target: " + currentTarget.printCoordinates());

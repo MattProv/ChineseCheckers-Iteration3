@@ -1,4 +1,4 @@
-package org.example.tests;
+package org.example.general;
 
 import org.example.game_logic.*;
 import org.junit.Before;

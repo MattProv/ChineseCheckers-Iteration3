@@ -29,6 +29,7 @@ public final class GameManager {
     private List<Agent> agents = new ArrayList<>();
     private int currentTurn = 0;
     private int botsCount = 0;
+    private int playersFinished = 0;
 
     // Ruleset for the game
     private Rules ruleset = new StandardRules();
@@ -327,11 +328,19 @@ public final class GameManager {
         agent.liftLocks();
 
         if (ruleset.checkWinCondition(agents.get(currentTurn))) {
-            gameManagerCallbackHandler.onGameEnded(agents.get(currentTurn));
-            return;
+            agents.get(currentTurn).setHasWon(true);
+            playersFinished++;
+            gameManagerCallbackHandler.onPlayerFinished(agent, playersFinished);
+            if (playersFinished+1 >= agents.size()) {
+                gameManagerCallbackHandler.onGameEnded();
+                return;
+            }
         }
         Agent oldTurn = agents.get(currentTurn);
-        currentTurn = (currentTurn + 1) % agents.size();
+        do {
+            currentTurn = (currentTurn + 1) % agents.size();
+        }
+        while (agents.get(currentTurn).getHasWon());
         synchronizeGameState();
 
         gameManagerCallbackHandler.onTurnChange(oldTurn, agents.get(currentTurn), currentTurn);

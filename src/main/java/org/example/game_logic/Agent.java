@@ -58,6 +58,8 @@ public class Agent implements Serializable {
      */
     private boolean isPlayer = false;
 
+    private boolean hasWon = false;
+
     /**
      * Creates an agent with a unique ID and specifies if it is a player or an AI.
      * Assigns the agent a random color.
@@ -238,5 +240,13 @@ public class Agent implements Serializable {
      */
     public SerializableColor getColor() {
         return color;
+    }
+
+    public boolean getHasWon() {
+        return hasWon;
+    }
+
+    public void setHasWon(boolean hasWon) {
+        this.hasWon = hasWon;
     }
 }
