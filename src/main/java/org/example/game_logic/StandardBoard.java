@@ -2,6 +2,9 @@ package org.example.game_logic;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Represents a standard board for the game, implementing logic for board generation, moves, and state management.
@@ -150,6 +153,46 @@ public final class StandardBoard extends Board implements Serializable, Cloneabl
             node.addNeighbour(getNode(new Coordinate(x + 1, y - 1)));
             node.addNeighbour(getNode(new Coordinate(x - 1, y - 1)));
         }
+    }
+    @Override
+    public int calculateDistance(Node start, Node end) {
+        int distance = 0;
+
+        if (start.equals(end)) {
+            return distance; // If start and end are the same, return 0
+        }
+
+        HashSet<Node> checkedNodes = new HashSet<>();
+        Queue<Node> queue = new LinkedList<>();
+
+        // Start BFS
+        checkedNodes.add(start);
+        queue.add(start);
+
+        while (!queue.isEmpty()) {
+            int levelSize = queue.size(); // Number of nodes at the current distance level
+
+            // Process all nodes at the current level
+            for (int i = 0; i < levelSize; i++) {
+                Node currentNode = queue.poll();
+
+                for (Node neighbour : currentNode.getNeighbours()) {
+                    if (neighbour.equals(end)) {
+                        return distance + 1; // End node found, return the distance
+                    }
+
+                    if (!checkedNodes.contains(neighbour)) {
+                        checkedNodes.add(neighbour); // Mark the node as visited
+                        queue.add(neighbour); // Add to the queue for further exploration
+                    }
+                }
+            }
+
+            distance++; // Increment distance after processing the level
+        }
+
+        // If we exhaust the queue (which won't happen in your case), return -1 as a fallback
+        return -1;
     }
 
     /**
